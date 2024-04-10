@@ -1,17 +1,40 @@
-name: Publish to Hugging Face Space
+name: Sync to Hugging Face hub
 
-on:  # Trigger for the Action (customize this if needed)
+on:
   push:
-    branches: [ main ] 
+    branches: [main]
+
+  # to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  publish:
+  sync-to-hub:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Push to Hugging Face Space
-        uses: huggingface/hugging-push@main  # Hugging Face Action
         with:
-            repository: "huggingface.co/spaces/nbiish/feather-checker"
-            directory: "feather-checker"  # Relative path to your folder
-            token: ${{ secrets.HF_TOKEN }}
+          fetch-depth: 0
+          lfs: true
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd feather-checker
+          git push https://nbiish:$HF_TOKEN@huggingface.co/spaces/nbiish/feather-checker main
+
+name: Check file size
+on:               # or directly `on: [push]` to run the action on every push on any branch
+  pull_request:
+    branches: [main]
+
+  # to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check large files
+        uses: ActionsDesk/lfs-warning@v2.0
+        with:
+          filesizelimit: 10485760 # this is 10MB so we can sync to HF Spaces
