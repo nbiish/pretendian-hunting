@@ -16,7 +16,6 @@ with open('protected-birds.csv', 'r') as csvfile:
 client = anthropic.Anthropic()
 
 # Function to check if the feather is from a protected bird
-# Function to check if the feather is from a protected bird
 def check_feather(image_url):
     # Load the image
     image_media_type = "image/jpeg"
