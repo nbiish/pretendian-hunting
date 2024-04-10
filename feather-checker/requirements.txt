@@ -3,7 +3,7 @@ pandas
 numpy
 Pillow
 requests
-imageai
+imageai==2.1.6
 tensorflow>=2.4.0
 pytest
 mock

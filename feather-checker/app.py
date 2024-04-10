@@ -1,11 +1,3 @@
- ### TODO:
-# 1. gradio interface to upload image
-# 2. use image ai model to determine if feather is from protected-birds.csv file
-# 3. prompt user to verify results if bird is protected for themselves before making a report
-# 4. list possible protected birds from list of protected-birds.csv file along with confidence score
-# 5. output the result in a table format along with search queries for each bird for user to verify
-# 6. prompt user to make a report they are confident the feather in the image is from a protected bird along with the link to https://www.fws.gov/contact-us
-
 import gradio as gr
 import pandas as pd
 import numpy as np
@@ -46,9 +38,20 @@ def check_feather(image):
                 protected = True
                 protected_birds_list.append([bird, prediction, probabilities[model_predictions.index(prediction)]])
     
+    if protected:
+        # Display the results
+        gr.Interface(fn=lambda: protected_birds_list, inputs="text", outputs="text").launch()
+        user_verification = gr.inputs.Checkbox(label="Verify the results")
+        if user_verification:
+            # Output the result in a table format
+            gr.Interface(fn=lambda: protected_birds_list, inputs=user_verification, outputs="html").launch()
+            # Prompt user to make a report
+            gr.Interface(fn=lambda: "If confident, report to: https://www.fws.gov/contact-us", inputs=user_verification, outputs="text").launch()
+    else:
+        gr.Interface(fn=lambda: "No protected bird detected", inputs=image, outputs="text").launch()
+
     return protected, protected_birds_list
 
 # Gradio interface
 image = gr.inputs.Image()
 gr.Interface(fn=check_feather, inputs=image, outputs="text").launch()
-
