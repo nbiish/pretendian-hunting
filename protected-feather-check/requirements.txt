@@ -1,0 +1,10 @@
+gradio
+pandas
+numpy
+Pillow
+requests
+imageai
+tensorflow==2.4.0
+pytest
+mock
+coverage
