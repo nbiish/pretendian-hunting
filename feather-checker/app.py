@@ -1,42 +1,59 @@
 import gradio as gr
-import pandas as pd
-import numpy as np
-import os
-from PIL import Image
-import requests
-from io import BytesIO
-from imageai.Prediction import ImagePrediction
 import csv
+import anthropic
+import base64
+import httpx
 
-# Load the protected-birds.csv file
-protected_birds = pd.read_csv('protected-birds.csv')
-protected_birds = protected_birds.dropna()
-protected_birds = protected_birds['Common Name'].str.lower().values
+# Load the protected-birds.csv file into a list
+protected_birds_list = []
+with open('protected-birds.csv', 'r') as csvfile:
+    reader = csv.reader(csvfile)
+    next(reader, None)  # Skip the headers
+    for row in reader:
+        protected_birds_list.append(row[0].lower())  # Assuming 'Common Name' is in the first column
 
-# Load the image ai model
-model = ImagePrediction()
-model.setModelTypeAsResNet()
-model.setModelPath("resnet50_weights_tf_dim_ordering_tf_kernels.h5")
-model.loadModel()
+# Initialize the anthropic client
+client = anthropic.Anthropic()
 
 # Function to check if the feather is from a protected bird
-def check_feather(image):
+# Function to check if the feather is from a protected bird
+def check_feather(image_url):
     # Load the image
-    response = requests.get(image)
-    img = Image.open(BytesIO(response.content))
-    img.save('image.jpg')
+    image_media_type = "image/jpeg"
+    image_data = base64.b64encode(httpx.get(image_url).content).decode("utf-8")
     
     # Make a prediction
-    model_predictions, probabilities = model.predictImage('image.jpg', result_count=5)
+    message = client.messages.create(
+        model="claude-3-opus-20240229",
+        max_tokens=1024,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": image_media_type,
+                            "data": image_data,
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": "Describe this image."
+                    }
+                ],
+            }
+        ],
+    )
+    model_predictions = message.choices[0].message['content']['text']
     
     # Check if the feather is from a protected bird
     protected = False
-    protected_birds_list = []
-    for bird in protected_birds:
-        for prediction in model_predictions:
-            if bird in prediction.lower():
-                protected = True
-                protected_birds_list.append([bird, prediction, probabilities[model_predictions.index(prediction)]])
+    for bird in protected_birds_list:
+        if bird in model_predictions.lower():
+            protected = True
+            protected_birds_list.append([bird, model_predictions])
     
     if protected:
         # Display the results
@@ -48,10 +65,10 @@ def check_feather(image):
             # Prompt user to make a report
             gr.Interface(fn=lambda: "If confident, report to: https://www.fws.gov/contact-us", inputs=user_verification, outputs="text").launch()
     else:
-        gr.Interface(fn=lambda: "No protected bird detected", inputs=image, outputs="text").launch()
+        gr.Interface(fn=lambda: "No protected bird detected", inputs=image_url, outputs="text").launch()
 
     return protected, protected_birds_list
 
 # Gradio interface
-image = gr.inputs.Image()
-gr.Interface(fn=check_feather, inputs=image, outputs="text").launch()
+image_url = gr.inputs.Textbox()
+gr.Interface(fn=check_feather, inputs=image_url, outputs="text").launch()
