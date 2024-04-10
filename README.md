@@ -3,6 +3,7 @@
 ### SHORT-TERM GOALS:  
 [ ] - modify to use list/dictionaries of the now `protected-birds.txt`  
 [ ] - make huggingface space/s  
+[ ] - add links to google dork info
   
 ### LONG-TERM GOALS:
 [ ] - change obsidian side into investigation how-to and checklist
@@ -10,10 +11,10 @@
 
 
 
-## USING --> Feather Checker  
+## USING --> Obsidian - Investiation and Reporting Template
 
 ### Downloading
-To download the repository and start working on it, run the following commands in your terminal:
+To download the repository, run the following commands in your terminal:
 
 ```bash
 # Clone the repository
@@ -23,11 +24,10 @@ git clone https://github.com/nbiish/pretendian-hunting.git
 cd repository
 ```
 
-### Usage
-#### Basic Users
+### Using feather-checker  
 For basic users, you can visit our [HuggingFace space](https.hugginface.co/nbiish) where this code will be running.
 
-#### DIY pretendian investigations
+### DIY pretendian investigations  
 For advancing your investigative practices use Obsidian by following the steps below:
   
 Download and install Obsidian from https://obsidian.md/ 
