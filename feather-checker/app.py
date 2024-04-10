@@ -52,7 +52,3 @@ def check_feather(image):
 image = gr.inputs.Image()
 gr.Interface(fn=check_feather, inputs=image, outputs="text").launch()
 
-
-# is the following code ready to use? (answer with yes or no in the next comment)
-
-# Yes
