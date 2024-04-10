@@ -12,6 +12,6 @@ jobs:
       - name: Push to Hugging Face Space
         uses: huggingface/hugging-push@main  # Hugging Face Action
         with:
-          repository: "huggingface.co/spaces/feather-checker"
-          directory: "feather-checker"  # Relative path to your folder
-          token: ${{ secrets.HF_TOKEN }}
+            repository: "huggingface.co/spaces/nbiish/feather-checker"
+            directory: "feather-checker"  # Relative path to your folder
+            token: ${{ secrets.HF_TOKEN }}
