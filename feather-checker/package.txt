@@ -1,3 +1,3 @@
-gradio
-anthropic
-httpx
+transformers==4.26.0
+datasets==2.4.0
+sentencepiece==0.1.96

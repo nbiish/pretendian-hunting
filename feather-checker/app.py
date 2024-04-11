@@ -1,58 +1,44 @@
 import gradio as gr
 import csv
-import anthropic
+import gemini
 import base64
 import httpx
 
-# Load the protected-birds.csv file into a list
-protected_birds_list = []
-with open('protected-birds.csv', 'r') as csvfile:
-    reader = csv.reader(csvfile)
-    next(reader, None)  # Skip the headers
-    for row in reader:
-        protected_birds_list.append(row[0].lower())  # Assuming 'Common Name' is in the first column
+# Load the protected-birds.txt file into a dictionary
+protected_birds_dict = {}
+with open('protected-birds.txt', 'r') as txtfile:
+    for line in txtfile:
+        bird, confidence = line.strip().split(',')
+        protected_birds_dict[bird.lower()] = float(confidence)
 
-# Initialize the anthropic client
-client = anthropic.Anthropic()
+# Initialize the gemini client
+def init_client(api_key):
+    return gemini.Client(api_key)
 
 # Function to check if the feather is from a protected bird
-def check_feather(image_url):
+def check_feather(image_url, api_key):
     # Load the image
     image_media_type = "image/jpeg"
     image_data = base64.b64encode(httpx.get(image_url).content).decode("utf-8")
     
     # Make a prediction
-    message = client.messages.create(
-        model="claude-3-opus-20240229",
-        max_tokens=1024,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": image_media_type,
-                            "data": image_data,
-                        },
-                    },
-                    {
-                        "type": "text",
-                        "text": "Describe this image."
-                    }
-                ],
-            }
-        ],
+    client = init_client(api_key)
+    response = client.predict(
+        model_id="text-bison-001",
+        inputs={
+            "image": image_data,
+            "question": "Describe this image."
+        }
     )
-    model_predictions = message.choices[0].message['content']['text']
+    model_predictions = response["candidates"][0]["output"]
     
     # Check if the feather is from a protected bird
     protected = False
-    for bird in protected_birds_list:
+    protected_birds_list = []
+    for bird, confidence in protected_birds_dict.items():
         if bird in model_predictions.lower():
             protected = True
-            protected_birds_list.append([bird, model_predictions])
+            protected_birds_list.append([bird, confidence, model_predictions])
     
     if protected:
         # Display the results
@@ -70,4 +56,5 @@ def check_feather(image_url):
 
 # Gradio interface
 image_url = gr.inputs.Textbox()
-gr.Interface(fn=check_feather, inputs=image_url, outputs="text").launch()
+api_key = gr.inputs.Textbox(label="Google API Key")
+gr.Interface(fn=check_feather, inputs=[image_url, api_key], outputs="text").launch()
